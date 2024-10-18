@@ -1,0 +1,29 @@
+FROM ubuntu:24.10
+
+ARG NODE_TOKEN
+
+# Docker setup
+
+# Installation
+RUN apt install docker.io
+
+# Starting Docker daemon
+RUN systemctl enable docker && systemctl start docker
+
+# Verifying docker works
+RUN systemctl status docker
+
+
+# K3S Setup
+
+# Setup for k3s
+RUN hostnamectl set-hostname server
+
+# Install k3s
+RUN curl -sfL https://get.k3s.io | sh -
+
+# Check k3s status
+RUN systemctl status k3s
+RUN kubectl get nodes
+
+RUN k3s token create ${NODE_TOKEN}

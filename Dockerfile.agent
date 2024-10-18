@@ -1,0 +1,28 @@
+FROM ubuntu:24.10
+
+ARG NODE_TOKEN
+
+# Docker setup
+
+# Installation
+RUN apt install docker.io
+
+# Starting Docker daemon
+RUN systemctl enable docker && systemctl start docker
+
+# Verifying docker works
+RUN systemctl status docker
+
+# K3S Setup
+
+# Setup for k3s
+RUN hostnamectl set-hostname agent
+
+# Install k3s
+RUN curl -sfL https://get.k3s.io | sh -
+
+
+RUN firewall-cmd --add-port=6443/tcp --zone=public --permanent
+RUN firewall-cmd --add-port=8472/udp --zone=public --permanent
+RUN firewall-cmd --reload
+RUN INSTALL_K3S_SKIP_DOWNLOAD=true K3S_URL=http://server:6443 K3S_TOKEN=mynodetoken k3s-install.sh
