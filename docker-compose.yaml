@@ -1,0 +1,35 @@
+services:
+  k3s_server:
+    user: root
+    build:
+      dockerfile: Dockerfile.server
+      args:
+       NODE_TOKEN: myservertoken
+    ports:
+      - 6443:6443
+      - 8472:8472
+    volumes:
+      - server
+  
+  k3s_worker:
+    depends_on: 
+      - k3s_server
+    build: 
+      dockerfile: Dockerfile.agent
+      args:
+       NODE_TOKEN: myservertoken
+    ports:
+      - 6443:6443
+      - 8472:8472
+    deploy:
+      mode: replicated
+      replicas: 5
+
+    volumes:
+      - agent
+
+volumes:
+  server:
+    external: true
+  agent:
+    external: true
