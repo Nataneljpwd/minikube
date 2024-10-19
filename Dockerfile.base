@@ -1,0 +1,40 @@
+FROM ubuntu:22.04
+
+ARG NODE_TOKEN
+
+# Docker setup
+
+# Installation
+RUN apt-get update
+RUN apt-get install ca-certificates curl -y
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+RUN chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+RUN echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update
+
+RUN apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+# Verifying docker works
+RUN docker --help
+
+
+# K3S Setup
+
+# Install k3s
+USER root
+RUN curl -OL https://github.com/k3s-io/k3s/releases/download/v1.31.1%2Bk3s1/k3s
+RUN chmod +x k3s
+# Check k3s satus
+RUN ./k3s
+RUN mkdir -p /etc/rancher/k3s
+RUN touch /etc/rancher/k3s/k3s.yaml
+RUN echo "export KUBECONFIG=/etc/rancher/k3s/config.yaml" >> ~/.bashrc
+RUN echo "write-kubeconfig-mode: \"0644\" \n\ncluster-init: true" >> /etc/rancher/k3s/config.yaml
+RUN . ~/.bashrc
+

@@ -1,35 +1,43 @@
 services:
+
+  node_base:
+    build:
+      dockerfile: Dockerfile.base
+      args:
+       NODE_TOKEN: nlhmcq.oxxnj9xav270vvz3
+    image: node_base:1.0.0
+
   k3s_server:
     user: root
+    stdin_open: true
+    tty: true
     build:
       dockerfile: Dockerfile.server
-      args:
-       NODE_TOKEN: myservertoken
+      # args:
+      #  NODE_TOKEN: nlhmcq.oxxnj9xav270vvz3
     ports:
       - 6443:6443
       - 8472:8472
     volumes:
-      - server
+      - server:/server
+    depends_on: 
+       - node_base
   
   k3s_worker:
     depends_on: 
       - k3s_server
     build: 
       dockerfile: Dockerfile.agent
-      args:
-       NODE_TOKEN: myservertoken
     ports:
-      - 6443:6443
-      - 8472:8472
+      - 6443-6450:6443
+      - 8472-8480:8472
     deploy:
       mode: replicated
-      replicas: 5
+      replicas: 1
 
     volumes:
-      - agent
+      - agent:/agent
 
 volumes:
-  server:
-    external: true
+  server: 
   agent:
-    external: true

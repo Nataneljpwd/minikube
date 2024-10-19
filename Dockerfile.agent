@@ -1,41 +1,12 @@
-FROM ubuntu:22.04
-
-ARG NODE_TOKEN
-
-# Docker setup
-
-# Installation
-RUN apt-get update
-RUN apt-get install ca-certificates curl -y
-RUN install -m 0755 -d /etc/apt/keyrings
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-RUN chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-RUN echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-RUN apt-get update
-
-RUN apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Starting Docker daemon
-RUN systemctl enable docker && systemctl start docker
-
-# Verifying docker works
-RUN systemctl status docker
-
-# K3S Setup
+FROM node_base:1.0.0
 
 # Setup for k3s
-RUN hostnamectl set-hostname agent
 
-# Install k3s
-RUN curl -sfL https://get.k3s.io | sh -
+RUN echo "agent" > /etc/hostname
 
+EXPOSE 6443:6443/tcp
+EXPOSE 8472:8472/udp
 
-RUN firewall-cmd --add-port=6443/tcp --zone=public --permanent
-RUN firewall-cmd --add-port=8472/udp --zone=public --permanent
-RUN firewall-cmd --reload
-RUN INSTALL_K3S_SKIP_DOWNLOAD=true K3S_URL=http://server:6443 K3S_TOKEN=${NODE_TOKEN} k3s-install.sh
+# RUN ./k3s agent --server http://localhost:6443 --token ${NODE_TOKEN}
+CMD ./k3s agent --server https://k3s.example.com --token ${NODE_TOKEN} -write-kubeconfig-mode=644
+
